@@ -1,0 +1,78 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id             String       @id @default(uuid())
+  name           String
+  email          String       @unique
+  password       String
+  sele_as_buyer  Sale[]       @relation("buyer")
+  sele_as_seller Sale[]       @relation("seller")
+  userAccess     UserAccess[]
+  created_at     DateTime     @default(now())
+  updated_at     DateTime     @updatedAt
+}
+
+model UserAccess {
+  id         String   @id @default(uuid())
+  User       User?    @relation(fields: [userId], references: [id])
+  userId     String?
+  Access     Access?  @relation(fields: [accessId], references: [id])
+  accessId   String?
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+}
+
+model Access {
+  id         String       @id @default(uuid())
+  name       String       @unique
+  userAccess UserAccess[]
+  product    Product[]
+  created_at DateTime     @default(now())
+  updated_at DateTime     @updatedAt
+}
+
+model Product {
+  id          String        @id @default(uuid())
+  name        String
+  description String
+  price       Float
+  amount      Int
+  Access      Access?       @relation(fields: [accessId], references: [id], onDelete: Cascade)
+  accessId    String?
+  created_at  DateTime      @default(now())
+  updated_at  DateTime      @updatedAt
+  saleProduct saleProduct[]
+}
+
+model Sale {
+  id          String        @id @default(uuid())
+  total_value Float
+  Buyer       User?         @relation("buyer", fields: [buyerId], references: [id])
+  buyerId     String?
+  Seller      User?         @relation("seller", fields: [sellerId], references: [id])
+  sellerId    String?
+  saleProduct saleProduct[]
+  created_at  DateTime      @default(now())
+  updated_at  DateTime      @updatedAt
+}
+
+model saleProduct {
+  id         String   @id @default(uuid())
+  quantity   Int
+  Sale       Sale     @relation(fields: [saleId], references: [id])
+  saleId     String
+  Product    Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  productId  String
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+}
